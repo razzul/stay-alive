@@ -3,6 +3,20 @@ Stay Alive: wordpress plugin to check logged in user's status
 
 
 # How to use it
+At any point of time in you application call javascript funciton 
+```HTML
+<script>
+        stay_alive.online()
+</script>
+```
+
+It will return user online status as `true` and `false` as per login in status in json format like below: 
+
+```JSON
+{"online": false}
+```
+
+# Installation 
 Step 1: [Download](https://github.com/razzul/stay-alive/releases) latest version of **stay-alive** 
 
 Step 2: Extract the file under `your_project\wp-content\plugins\` <br>
