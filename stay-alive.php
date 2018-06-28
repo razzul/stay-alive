@@ -34,25 +34,45 @@ class StayAlive
         add_action('admin_head', array($this, 'stay_alive_css'));
         add_action('admin_footer', array($this, 'stay_alive_checker'));
         add_action('wp_footer', array($this, 'stay_alive_checker'));
+        add_action('wp_logout', array($this, 'user_logout'));
+        add_action('wp_login', array($this, 'user_in'));
+    }
+
+    public function user_in($current_user)
+    {
+        $options      = get_option('stay_alive_credentials');
+        $current_user = $user_obj = get_user_by('login', $current_user );
+
+        $channel_name = 'stay-alive-channel-' . $current_user->id;
+        $event_name   = 'stay-alive-event' . $current_user->id;
+
+        require __DIR__ . '/vendor/autoload.php';
+        $pusher = new Pusher\Pusher($options['pusher_key'], $options['pusher_secret'], $options['pusher_app_id'], array('cluster' => $options['pusher_cluster']));
+        $pusher->trigger($channel_name, $event_name, array('online' => true));
+        echo '<script>stay_alive.online()</script>';
+    }
+
+    public function user_logout()
+    {
+        $options      = get_option('stay_alive_credentials');
+        $current_user = wp_get_current_user();
+
+        $channel_name = 'stay-alive-channel-' . $current_user->id;
+        $event_name   = 'stay-alive-event' . $current_user->id;
+
+        require __DIR__ . '/vendor/autoload.php';
+        $pusher = new Pusher\Pusher($options['pusher_key'], $options['pusher_secret'], $options['pusher_app_id'], array('cluster' => $options['pusher_cluster']));
+        $pusher->trigger($channel_name, $event_name, array('online' => false));
+        echo '<script>stay_alive.online()</script>';
     }
 
     public function stay_alive_checker()
     {
-        $options = get_option('stay_alive_credentials');
+        $options      = get_option('stay_alive_credentials');
         $current_user = wp_get_current_user();
 
-        $user_details = [];
-        $user_details['id'] = $current_user->id;
-        $user_details['user_email'] = $current_user->user_email;
-        $user_details['display_name'] = $current_user->display_name;
-
-        $channel_name = 'stay-alive-channel';
-        $event_name = 'stay-alive-event';
-
-
-        require __DIR__ . '/vendor/autoload.php';
-        $pusher = new Pusher\Pusher($options['pusher_key'], $options['pusher_secret'], $options['pusher_app_id'], array('cluster' => $options['pusher_cluster']));
-        $pusher->trigger($channel_name, $event_name, array('message' => 'hello world'));
+        $channel_name = 'stay-alive-channel-' . $current_user->id;
+        $event_name   = 'stay-alive-event' . $current_user->id;
 
         echo '
         <script src="https://js.pusher.com/4.1/pusher.min.js"></script>
@@ -61,35 +81,35 @@ class StayAlive
             var StayAlive = function() {
 
                 this.pusher = null;
-                this.channel_name = "'. $channel_name .'"
-                this.event_name = "'. $event_name .'"
-                
+                this.channel_name = "' . $channel_name . '"
+                this.event_name = "' . $event_name . '"
+                this.status = false
+
                 this.credentials = function() {
-                    return '. json_encode($options) .'
+                    return ' . json_encode($options) . '
                 }
-                
-                this.user = function() {
-                    return '. json_encode($user_details) .'
-                }
-                
-                //this.status = (this.user.id !== "") ? true : false;
-                
+
                 this.pusher = function() {
                     var pusher = new Pusher(this.credentials().pusher_key, { cluster: this.credentials().pusher_cluster });
                     this.channel = pusher.subscribe(this.channel_name);
-                    
+
                 }
 
-                this.status = function() {
-                    this.channel.bind(this.event_name, function(data) {
-                      console.log(data);
+                this.online = function() {
+                    this.channel.bind(this.event_name, function(status) {
+                        this.status = status.online
+                        console.log(status)
+                        if( this.status ) return this.status
+                        return this.status
                     });
+
+                    return this.status
                 }
             }
-            
+
             var stay_alive = new StayAlive()
             stay_alive.pusher()
-            stay_alive.status()
+            stay_alive.online()
         </script>
         ';
     }
@@ -112,7 +132,7 @@ class StayAlive
     /**
      * Add custom css
      */
-    public function stay_alive_css($value='')
+    public function stay_alive_css($value = '')
     {
         echo '<style>
             .stay-alive-form input:not([type="submit"]) {
@@ -134,14 +154,14 @@ class StayAlive
             <h1>Stay Alive</h1>
             <form method="post" action="options.php" class="stay-alive-form">
                 <?php
-                    // This prints out all hidden setting fields
-                    settings_fields('my_option_group');
-                    do_settings_sections('stay-alive-admin');
-                    submit_button();
+                // This prints out all hidden setting fields
+                settings_fields('my_option_group');
+                do_settings_sections('stay-alive-admin');
+                submit_button();
                 ?>
             </form>
-      </div>
-      <?php
+        </div>
+        <?php
     }
 
     /**
