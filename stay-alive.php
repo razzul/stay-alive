@@ -100,6 +100,7 @@ class StayAlive
 
         $channel_name = 'presence-stay-alive-channel';
         $event_name   = 'stay-alive-event';
+        $stay_alive_trigger = !empty($options['stay_alive_trigger']) ? $options['stay_alive_trigger'] : 'test_stay_alive';
 
         echo '
         <script src="https://js.pusher.com/4.1/pusher.min.js"></script>
@@ -146,7 +147,7 @@ class StayAlive
                     return this.channel.members.members
                 }
 
-                this.online = function(callback) {
+                this.online = function(callback = "test_stay_alive") {
                     stay_alive.subscribe()
                     this.channel.bind("pusher:subscription_succeeded", function(members)  {
                         if(callback == "") {
@@ -180,7 +181,7 @@ class StayAlive
             }
 
             var stay_alive = new StayAlive()
-            stay_alive.online(test_stay_alive)
+            stay_alive.online('. $stay_alive_trigger .')
         </script>
         ';
     }
@@ -284,6 +285,14 @@ class StayAlive
             'stay-alive-admin',
             'setting_section_id'
         );
+
+        add_settings_field(
+            'stay_alive_trigger',
+            'Callback Function (js)',
+            array($this, 'stay_alive_trigger_callback'),
+            'stay-alive-admin',
+            'setting_section_id'
+        );
     }
 
     /**
@@ -308,6 +317,10 @@ class StayAlive
 
         if (isset($input['pusher_cluster'])) {
             $new_input['pusher_cluster'] = sanitize_text_field($input['pusher_cluster']);
+        }
+
+        if (isset($input['stay_alive_trigger'])) {
+            $new_input['stay_alive_trigger'] = sanitize_text_field($input['stay_alive_trigger']);
         }
 
         return $new_input;
@@ -362,6 +375,17 @@ class StayAlive
         printf(
             '<input type="text" id="pusher_cluster" name="stay_alive_credentials[pusher_cluster]" value="%s" />',
             isset($this->options['pusher_cluster']) ? esc_attr($this->options['pusher_cluster']) : ''
+        );
+    }
+
+    /**
+     * Get the settings option array and print one of its values
+     */
+    public function stay_alive_trigger_callback()
+    {
+        printf(
+            '<input type="text" id="stay_alive_trigger" name="stay_alive_credentials[stay_alive_trigger]" value="%s" />',
+            isset($this->options['stay_alive_trigger']) ? esc_attr($this->options['stay_alive_trigger']) : ''
         );
     }
 
