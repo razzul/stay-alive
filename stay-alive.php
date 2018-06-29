@@ -36,6 +36,31 @@ class StayAlive
         add_action('wp_footer', array($this, 'stay_alive_checker'));
         add_action('wp_logout', array($this, 'user_logout'));
         add_action('wp_login', array($this, 'user_in'));
+        add_action('wp_ajax_stay_alive_auth', array($this, 'stay_alive_auth'));
+    }
+
+    public function stay_alive_auth()
+    {
+        $socket_id = $_POST['socket_id'];
+        $channel_name = $_POST['channel_name'];
+        $options      = get_option('stay_alive_credentials');
+        $current_user = wp_get_current_user();
+
+        require __DIR__ . '/vendor/autoload.php';
+        $pusher = new Pusher\Pusher($options['pusher_key'], $options['pusher_secret'], $options['pusher_app_id'], array('cluster' => $options['pusher_cluster']));
+         
+        //Any data you want to send about the person who is subscribing
+        $presence_data = array(
+            'name' => $current_user->display_name
+        );
+         
+        echo $pusher->presence_auth(
+            $channel_name, //the name of the channel the user is subscribing to 
+            $socket_id, //the socket id received from the Pusher client library
+            $current_user->id,  //a UNIQUE USER ID which identifies the user
+            $presence_data //the data about the person
+        );
+        exit();
     }
 
     public function user_in($current_user)
@@ -43,13 +68,14 @@ class StayAlive
         $options      = get_option('stay_alive_credentials');
         $current_user = $user_obj = get_user_by('login', $current_user );
 
-        $channel_name = 'stay-alive-channel-' . $current_user->id;
-        $event_name   = 'stay-alive-event' . $current_user->id;
+        $channel_name = 'presence-stay-alive-channel';
+        $event_name   = 'stay-alive-event';
 
         require __DIR__ . '/vendor/autoload.php';
         $pusher = new Pusher\Pusher($options['pusher_key'], $options['pusher_secret'], $options['pusher_app_id'], array('cluster' => $options['pusher_cluster']));
-        $pusher->trigger($channel_name, $event_name, array('online' => true));
-        echo '<script>stay_alive.online()</script>';
+        
+        $pusher->trigger($channel_name, $event_name, array('online' => true, 'user' => $current_user));
+        //echo '<script>stay_alive.online(test_stay_alive)</script>';        
     }
 
     public function user_logout()
@@ -57,31 +83,41 @@ class StayAlive
         $options      = get_option('stay_alive_credentials');
         $current_user = wp_get_current_user();
 
-        $channel_name = 'stay-alive-channel-' . $current_user->id;
-        $event_name   = 'stay-alive-event' . $current_user->id;
+        $channel_name = 'presence-stay-alive-channel';
+        $event_name   = 'stay-alive-event';
 
         require __DIR__ . '/vendor/autoload.php';
         $pusher = new Pusher\Pusher($options['pusher_key'], $options['pusher_secret'], $options['pusher_app_id'], array('cluster' => $options['pusher_cluster']));
         $pusher->trigger($channel_name, $event_name, array('online' => false));
-        echo '<script>stay_alive.online()</script>';
+        echo '<script>stay_alive.unsubscribe("' . $channel_name . '")</script>';
     }
 
     public function stay_alive_checker()
     {
         $options      = get_option('stay_alive_credentials');
         $current_user = wp_get_current_user();
+        $current_user_id = $current_user->id;
 
-        $channel_name = 'stay-alive-channel-' . $current_user->id;
-        $event_name   = 'stay-alive-event' . $current_user->id;
+        $channel_name = 'presence-stay-alive-channel';
+        $event_name   = 'stay-alive-event';
 
         echo '
         <script src="https://js.pusher.com/4.1/pusher.min.js"></script>
         <script>
+            
+            function test_stay_alive(members) {
+                members.each(function(member) {
+                    console.log(member);
+                });
+            }
+            
             console.log("StayAlive: loaded");
             var StayAlive = function() {
 
                 this.pusher = null;
-                this.channel_name = "' . $channel_name . '"
+                this.channel = null;
+                this.current_user_id = "' . $current_user_id . '"
+                this.channel_name = "' .$channel_name . '"
                 this.event_name = "' . $event_name . '"
                 this.status = false
 
@@ -89,27 +125,62 @@ class StayAlive
                     return ' . json_encode($options) . '
                 }
 
-                this.pusher = function() {
-                    var pusher = new Pusher(this.credentials().pusher_key, { cluster: this.credentials().pusher_cluster });
-                    this.channel = pusher.subscribe(this.channel_name);
-
+                this.subscribe = function() {
+                    this.pusher = new Pusher(this.credentials().pusher_key, { cluster: this.credentials().pusher_cluster , authEndpoint: "'. site_url() .'/wp-admin/admin-ajax.php?action=stay_alive_auth",});
+                    this.channel = this.pusher.subscribe(this.channel_name);
                 }
 
-                this.online = function() {
-                    this.channel.bind(this.event_name, function(status) {
-                        this.status = status.online
-                        console.log(status)
-                        if( this.status ) return this.status
-                        return this.status
+                this.unsubscribe = function() {
+                    this.pusher.unsubscribe(this.channel_name);
+                }
+
+                this.count = function() {
+                    return this.channel.members.count
+                }
+
+                this.me = function() {
+                    return this.channel.members.me
+                }
+
+                this.users = function() {
+                    return this.channel.members.members
+                }
+
+                this.online = function(callback) {
+                    stay_alive.subscribe()
+                    this.channel.bind("pusher:subscription_succeeded", function(members)  {
+                        if(callback == "") {
+                            test_stay_alive(members)
+                        } else {
+                            callback(members)
+                        }
+                        
                     });
 
-                    return this.status
+                    this.channel.bind("pusher:member_added", function(member) {
+                        members = stay_alive.users()
+                        
+                        if(callback == "") {
+                            test_stay_alive(members)
+                        } else {
+                            callback(members)
+                        }
+                    });
+
+                    this.channel.bind("pusher:member_removed", function(member) {
+                        members = stay_alive.users()
+
+                        if(callback == "") {
+                            test_stay_alive(members)
+                        } else {
+                            callback(members)
+                        }
+                    });
                 }
             }
 
             var stay_alive = new StayAlive()
-            stay_alive.pusher()
-            stay_alive.online()
+            stay_alive.online(test_stay_alive)
         </script>
         ';
     }
