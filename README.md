@@ -1,6 +1,10 @@
 # stayalive
 Stay Alive: wordpress plugin to check logged in user's status 
 
+# Short Code
+
+*coming soon!*
+
 # Download
 [2.0.0](https://github.com/razzul/stay-alive/releases) latest version of **stay-alive**
 
