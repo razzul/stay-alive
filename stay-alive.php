@@ -65,31 +65,12 @@ class StayAlive
 
     public function user_in($current_user)
     {
-        $options      = get_option('stay_alive_credentials');
-        $current_user = $user_obj = get_user_by('login', $current_user );
-
-        $channel_name = 'presence-stay-alive-channel';
-        $event_name   = 'stay-alive-event';
-
-        require __DIR__ . '/vendor/autoload.php';
-        $pusher = new Pusher\Pusher($options['pusher_key'], $options['pusher_secret'], $options['pusher_app_id'], array('cluster' => $options['pusher_cluster']));
-        
-        $pusher->trigger($channel_name, $event_name, array('online' => true, 'user' => $current_user));
-        //echo '<script>stay_alive.online(test_stay_alive)</script>';        
+             
     }
 
     public function user_logout()
     {
-        $options      = get_option('stay_alive_credentials');
-        $current_user = wp_get_current_user();
-
-        $channel_name = 'presence-stay-alive-channel';
-        $event_name   = 'stay-alive-event';
-
-        require __DIR__ . '/vendor/autoload.php';
-        $pusher = new Pusher\Pusher($options['pusher_key'], $options['pusher_secret'], $options['pusher_app_id'], array('cluster' => $options['pusher_cluster']));
-        $pusher->trigger($channel_name, $event_name, array('online' => false));
-        echo '<script>stay_alive.unsubscribe("' . $channel_name . '")</script>';
+        
     }
 
     public function stay_alive_checker()
@@ -107,9 +88,7 @@ class StayAlive
         <script>
             
             function test_stay_alive(members) {
-                members.each(function(member) {
-                    console.log(member);
-                });
+                console.log(members);
             }
             
             console.log("StayAlive: loaded");
@@ -151,9 +130,9 @@ class StayAlive
                     stay_alive.subscribe()
                     this.channel.bind("pusher:subscription_succeeded", function(members)  {
                         if(callback == "") {
-                            test_stay_alive(members)
+                            test_stay_alive(members.members)
                         } else {
-                            callback(members)
+                            callback(members.members)
                         }
                         
                     });
@@ -384,7 +363,7 @@ class StayAlive
     public function stay_alive_trigger_callback()
     {
         printf(
-            '<input type="text" id="stay_alive_trigger" name="stay_alive_credentials[stay_alive_trigger]" value="%s" />',
+            '<input type="text" id="stay_alive_trigger" name="stay_alive_credentials[stay_alive_trigger]" value="%s" /><br><span>Default value: test_stay_alive</span><br><b>No need to user parenthesis symbol "()"</b>',
             isset($this->options['stay_alive_trigger']) ? esc_attr($this->options['stay_alive_trigger']) : ''
         );
     }
