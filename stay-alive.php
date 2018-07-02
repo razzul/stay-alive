@@ -3,7 +3,7 @@
 Plugin Name: Stay Alive
 Plugin URI: https://github.com/razzul/stayalive
 description: Stay Alive: wordpress plugin to check logged in user's status
-Version: 1.0
+Version: 2.1.0
 Author: razzul
 Author URI: https://github.com/razzul
 License: MIT
