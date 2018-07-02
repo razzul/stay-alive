@@ -3,7 +3,7 @@
 Plugin Name: Stay Alive
 Plugin URI: https://github.com/razzul/stayalive
 description: Stay Alive: wordpress plugin to check logged in user's status
-Version: 2.1.0
+Version: 1.0
 Author: razzul
 Author URI: https://github.com/razzul
 License: MIT
@@ -12,6 +12,8 @@ License: MIT
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
+
+include __DIR__ . '/stay-alive-widget.php';
 
 /**
  *
@@ -37,6 +39,16 @@ class StayAlive
         add_action('wp_logout', array($this, 'user_logout'));
         add_action('wp_login', array($this, 'user_in'));
         add_action('wp_ajax_stay_alive_auth', array($this, 'stay_alive_auth'));
+        add_shortcode('sa_online_users', array($this, 'stay_alive_shortcode'));
+    }
+
+    public function stay_alive_shortcode()
+    {
+        ?>
+        <div class="stay_alive">
+            <ul class="stay_alive_users"></ul>
+        </div>
+        <?php
     }
 
     public function stay_alive_auth()
@@ -90,77 +102,76 @@ class StayAlive
             function test_stay_alive(members) {
                 console.log(members);
             }
-            
-            console.log("StayAlive: loaded");
-            var StayAlive = function() {
+            jQuery(document).ready(function(){
+                console.log("StayAlive: loaded");
+                var StayAlive = function() {
 
-                this.pusher = null;
-                this.channel = null;
-                this.current_user_id = "' . $current_user_id . '"
-                this.channel_name = "' .$channel_name . '"
-                this.event_name = "' . $event_name . '"
-                this.status = false
+                    this.pusher = null;
+                    this.channel = null;
+                    this.current_user_id = "' . $current_user_id . '"
+                    this.channel_name = "' .$channel_name . '"
+                    this.event_name = "' . $event_name . '"
+                    this.status = false
 
-                this.credentials = function() {
-                    return ' . json_encode($options) . '
+                    this.credentials = function() {
+                        return ' . json_encode($options) . '
+                    }
+
+                    this.subscribe = function() {
+                        this.pusher = new Pusher(this.credentials().pusher_key, { cluster: this.credentials().pusher_cluster , authEndpoint: "'. site_url() .'/wp-admin/admin-ajax.php?action=stay_alive_auth",});
+                        this.channel = this.pusher.subscribe(this.channel_name);
+                    }
+
+                    this.unsubscribe = function() {
+                        this.pusher.unsubscribe(this.channel_name);
+                    }
+
+                    this.count = function() {
+                        return this.channel.members.count
+                    }
+
+                    this.me = function() {
+                        return this.channel.members.me
+                    }
+
+                    this.users = function() {
+                        return this.channel.members.members
+                    }
+
+                    this.online = function() {
+                        stay_alive.subscribe()
+                        this.channel.bind("pusher:subscription_succeeded", function(members)  {
+
+                            jQuery("ul.stay_alive_users").empty()
+                            for(var i = 1; i <= members.count; i++) {
+                                jQuery("ul.stay_alive_users").append("<li>"+ members.members[i].name +"</li>")
+                            }
+                            
+                        });
+
+                        this.channel.bind("pusher:member_added", function(member) {
+                            members = stay_alive.users()
+                            jQuery("ul.stay_alive_users").empty()
+                            for(var i = 1; i <= stay_alive.count(); i++) {
+                                jQuery("ul.stay_alive_users").append("<li>"+ members[i].name +"</li>")
+                            }
+                        });
+
+                        this.channel.bind("pusher:member_removed", function(member) {
+                            members = stay_alive.users()
+                            
+                            jQuery("ul.stay_alive_users").empty()
+                            for(var i = 1; i <= stay_alive.count(); i++) {
+                                jQuery("ul.stay_alive_users").append("<li>"+ members[i].name +"</li>")
+                            }
+
+                        });
+                    }
                 }
 
-                this.subscribe = function() {
-                    this.pusher = new Pusher(this.credentials().pusher_key, { cluster: this.credentials().pusher_cluster , authEndpoint: "'. site_url() .'/wp-admin/admin-ajax.php?action=stay_alive_auth",});
-                    this.channel = this.pusher.subscribe(this.channel_name);
-                }
-
-                this.unsubscribe = function() {
-                    this.pusher.unsubscribe(this.channel_name);
-                }
-
-                this.count = function() {
-                    return this.channel.members.count
-                }
-
-                this.me = function() {
-                    return this.channel.members.me
-                }
-
-                this.users = function() {
-                    return this.channel.members.members
-                }
-
-                this.online = function(callback = "test_stay_alive") {
-                    stay_alive.subscribe()
-                    this.channel.bind("pusher:subscription_succeeded", function(members)  {
-                        if(callback == "") {
-                            test_stay_alive(members.members)
-                        } else {
-                            callback(members.members)
-                        }
-                        
-                    });
-
-                    this.channel.bind("pusher:member_added", function(member) {
-                        members = stay_alive.users()
-                        
-                        if(callback == "") {
-                            test_stay_alive(members)
-                        } else {
-                            callback(members)
-                        }
-                    });
-
-                    this.channel.bind("pusher:member_removed", function(member) {
-                        members = stay_alive.users()
-
-                        if(callback == "") {
-                            test_stay_alive(members)
-                        } else {
-                            callback(members)
-                        }
-                    });
-                }
-            }
-
-            var stay_alive = new StayAlive()
-            stay_alive.online('. $stay_alive_trigger .')
+                var stay_alive = new StayAlive()
+                stay_alive.online()
+            })
         </script>
         ';
     }
@@ -264,14 +275,6 @@ class StayAlive
             'stay-alive-admin',
             'setting_section_id'
         );
-
-        add_settings_field(
-            'stay_alive_trigger',
-            'Callback Function (js)',
-            array($this, 'stay_alive_trigger_callback'),
-            'stay-alive-admin',
-            'setting_section_id'
-        );
     }
 
     /**
@@ -296,10 +299,6 @@ class StayAlive
 
         if (isset($input['pusher_cluster'])) {
             $new_input['pusher_cluster'] = sanitize_text_field($input['pusher_cluster']);
-        }
-
-        if (isset($input['stay_alive_trigger'])) {
-            $new_input['stay_alive_trigger'] = sanitize_text_field($input['stay_alive_trigger']);
         }
 
         return $new_input;
@@ -354,17 +353,6 @@ class StayAlive
         printf(
             '<input type="text" id="pusher_cluster" name="stay_alive_credentials[pusher_cluster]" value="%s" />',
             isset($this->options['pusher_cluster']) ? esc_attr($this->options['pusher_cluster']) : ''
-        );
-    }
-
-    /**
-     * Get the settings option array and print one of its values
-     */
-    public function stay_alive_trigger_callback()
-    {
-        printf(
-            '<input type="text" id="stay_alive_trigger" name="stay_alive_credentials[stay_alive_trigger]" value="%s" /><br><span>Default value: test_stay_alive</span><br><b>No need to user parenthesis symbol "()"</b>',
-            isset($this->options['stay_alive_trigger']) ? esc_attr($this->options['stay_alive_trigger']) : ''
         );
     }
 
