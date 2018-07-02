@@ -6,7 +6,7 @@ Stay Alive: wordpress plugin to check logged in user's status
 *coming soon!*
 
 # Download
-[2.0.0](https://github.com/razzul/stay-alive/releases) latest version of **stay-alive**
+[2.1.0](https://github.com/razzul/stay-alive/releases) latest version of **stay-alive**
 
 # How to use it
 *Update pusher details and callback function from admin [plugin page](http://localhost/wordpress-talk/wp-admin/options-general.php?page=stay-alive-admin)*
