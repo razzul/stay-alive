@@ -5,7 +5,7 @@ class StayAliveWidget extends WP_Widget {
     // constructor
     function StayAliveWidget() {
         // Give widget name here
-        parent::WP_Widget(false, $name = __('Onlin Users', 'wp_widget_plugin') );
+        parent::WP_Widget(false, $name = __('Stay Alive', 'wp_widget_plugin'), array( 'description' => __( 'A list of online users', 'wpb_widget_domain' ),));
 
     }
 
@@ -13,10 +13,8 @@ class StayAliveWidget extends WP_Widget {
         // Check values
         if( $instance) {
             $title = esc_attr($instance['title']);
-            $textarea = $instance['textarea'];
         } else {
             $title = '';
-            $textarea = '';
         }
         ?>
 
@@ -24,10 +22,7 @@ class StayAliveWidget extends WP_Widget {
             <label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title', 'wp_widget_plugin'); ?></label>
             <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title; ?>" />
         </p>
-        <p>
-            <label for="<?php echo $this->get_field_id('textarea'); ?>"><?php _e('Description:', 'wp_widget_plugin'); ?></label>
-            <textarea class="widefat" id="<?php echo $this->get_field_id('textarea'); ?>" name="<?php echo $this->get_field_name('textarea'); ?>" rows="7" cols="20" ><?php echo $textarea; ?></textarea>
-        </p>
+        
         <?php
     }
 
@@ -35,7 +30,6 @@ class StayAliveWidget extends WP_Widget {
         $instance = $old_instance;
         // Fields
         $instance['title'] = strip_tags($new_instance['title']);
-        $instance['textarea'] = strip_tags($new_instance['textarea']);
         return $instance;
     }
 
@@ -45,7 +39,6 @@ class StayAliveWidget extends WP_Widget {
 
         // these are the widget options
         $title = apply_filters('widget_title', $instance['title']);
-        $textarea = $instance['textarea'];
         echo $before_widget;
 
         // Display the widget
@@ -60,9 +53,7 @@ class StayAliveWidget extends WP_Widget {
 
         // Check if textarea is set
         echo '<div class="widget-textarea" style="width: 90%; margin-left:3%; padding:8px; background-color: white; border-radius: 3px; min-height: 70px;">';
-        if( $textarea ) {
-            echo '<p class="wp_widget_plugin_textarea" style="font-size:15px;">'.$textarea.'</p>';
-        }
+        echo do_shortcode( '[sa_online_users]' );
         echo '</div>';
         echo '</div>';
         echo $after_widget;
