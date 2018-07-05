@@ -11,12 +11,14 @@ Stay Alive: wordpress plugin to check logged in user's status
 # How to use it
 *Update pusher details and callback function from admin [plugin page](http://localhost/wordpress-talk/wp-admin/options-general.php?page=stay-alive-admin)*
 
-Apply the shortcode in your page 
+There are 2 ways to use it :
+
+## 1. Apply the shortcode in your page 
 ```
 [sa_online_users]
 ```
 
-Enable widget: Stay Alive
+## 2. Enable widget: Stay Alive
 
 ![alt tag](https://raw.githubusercontent.com/razzul/stay-alive/master/screenshoots/widget.jpg)
 
