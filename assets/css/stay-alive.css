@@ -1,0 +1,3 @@
+.stay-alive-form input:not([type="submit"]) {
+    width: 25em;
+}

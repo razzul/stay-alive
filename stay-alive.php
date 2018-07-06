@@ -3,7 +3,7 @@
 Plugin Name: Stay Alive
 Plugin URI: https://github.com/razzul/stayalive
 description: Stay Alive: wordpress plugin to check logged in user's status
-Version: 1.0
+Version: 2.4.0
 Author: razzul
 Author URI: https://github.com/razzul
 License: MIT
@@ -53,8 +53,8 @@ class StayAlive
 
     public function stay_alive_auth()
     {
-        $socket_id = $_POST['socket_id'];
-        $channel_name = $_POST['channel_name'];
+        $socket_id = sanitize_text_field($_POST['socket_id']);
+        $channel_name = sanitize_text_field($_POST['channel_name']);
         $options      = get_option('stay_alive_credentials');
         $current_user = wp_get_current_user();
 
@@ -94,86 +94,10 @@ class StayAlive
         $channel_name = 'presence-stay-alive-channel';
         $event_name   = 'stay-alive-event';
         $stay_alive_trigger = !empty($options['stay_alive_trigger']) ? $options['stay_alive_trigger'] : 'test_stay_alive';
-
-        echo '
-        <script src="https://js.pusher.com/4.1/pusher.min.js"></script>
-        <script>
-            
-            function test_stay_alive(members) {
-                console.log(members);
-            }
-            jQuery(document).ready(function(){
-                console.log("StayAlive: loaded");
-                var StayAlive = function() {
-
-                    this.pusher = null;
-                    this.channel = null;
-                    this.current_user_id = "' . $current_user_id . '"
-                    this.channel_name = "' .$channel_name . '"
-                    this.event_name = "' . $event_name . '"
-                    this.status = false
-
-                    this.credentials = function() {
-                        return ' . json_encode($options) . '
-                    }
-
-                    this.subscribe = function() {
-                        this.pusher = new Pusher(this.credentials().pusher_key, { cluster: this.credentials().pusher_cluster , authEndpoint: "'. site_url() .'/wp-admin/admin-ajax.php?action=stay_alive_auth",});
-                        this.channel = this.pusher.subscribe(this.channel_name);
-                    }
-
-                    this.unsubscribe = function() {
-                        this.pusher.unsubscribe(this.channel_name);
-                    }
-
-                    this.count = function() {
-                        return this.channel.members.count
-                    }
-
-                    this.me = function() {
-                        return this.channel.members.me
-                    }
-
-                    this.users = function() {
-                        return this.channel.members.members
-                    }
-
-                    this.online = function() {
-                        stay_alive.subscribe()
-                        this.channel.bind("pusher:subscription_succeeded", function(members)  {
-
-                            jQuery("ul.stay_alive_users").empty()
-                            for(var i = 1; i <= members.count; i++) {
-                                jQuery("ul.stay_alive_users").append("<li>"+ members.members[i].name +"</li>")
-                            }
-                            
-                        });
-
-                        this.channel.bind("pusher:member_added", function(member) {
-                            members = stay_alive.users()
-                            jQuery("ul.stay_alive_users").empty()
-                            for(var i = 1; i <= stay_alive.count(); i++) {
-                                jQuery("ul.stay_alive_users").append("<li>"+ members[i].name +"</li>")
-                            }
-                        });
-
-                        this.channel.bind("pusher:member_removed", function(member) {
-                            members = stay_alive.users()
-                            
-                            jQuery("ul.stay_alive_users").empty()
-                            for(var i = 1; i <= stay_alive.count(); i++) {
-                                jQuery("ul.stay_alive_users").append("<li>"+ members[i].name +"</li>")
-                            }
-
-                        });
-                    }
-                }
-
-                var stay_alive = new StayAlive()
-                stay_alive.online()
-            })
-        </script>
-        ';
+        wp_enqueue_script('pusher', '//js.pusher.com/4.1/pusher.min.js', array(), '4.1.0', true);
+        wp_register_script('stay_aliv_js', plugins_url( 'assets/js/stay-alive.js', __FILE__ ), array(), '2.4.0', true );
+        wp_localize_script('stay_aliv_js', 'config', array('current_user_id' => $current_user_id, 'channel_name' => $channel_name,'event_name' => $event_name, 'credentials' => $options, 'auth_url' => site_url() .'/wp-admin/admin-ajax.php?action=stay_alive_auth'));
+        wp_enqueue_script('stay_aliv_js');
     }
 
     /**
@@ -196,11 +120,9 @@ class StayAlive
      */
     public function stay_alive_css($value = '')
     {
-        echo '<style>
-            .stay-alive-form input:not([type="submit"]) {
-                width: 25em;
-            }
-        </style>';
+    	$my_css_ver = date("ymd-Gis", filemtime( plugin_dir_path( __FILE__ ) . 'css/stay-alive.css' ));
+    	wp_register_style( 'stay_aliv_css',    plugins_url( 'assets/css/stay-alive.css',  __FILE__ ), false,   $my_css_ver );
+    	wp_enqueue_style ( 'stay_aliv_css' );
     }
 
     /**
