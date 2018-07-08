@@ -10,7 +10,7 @@ Requires PHP: 5.2.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Stay Alive wordpress plugin to check online user's in your website in just minutes with widget or shortcode
+Stay Alive wordpress plugin to check online user's in your website in just minutes with widget or shortcode using Pusher 3rd party socket service.
 
 == Description ==
 
@@ -27,6 +27,7 @@ Stay Alive wordpress plugin to check online user's in your website in just minut
 	<li><strong>Short Code at any point</strong></li>
 	<li><strong>Secure</strong>
 	<li><strong>Free for all</strong>
+	<li><strong>Pusher</strong>
 
 == Screenshots ==
 
@@ -34,7 +35,7 @@ Stay Alive wordpress plugin to check online user's in your website in just minut
 2. Plugins activation
 3. Menu
 4. Plugin admin page
-5. Pusher
+5. Pusher (//js.pusher.com/4.1/pusher.min.js)
 6. Widget after activation
 
 == Frequently Asked Questions ==
@@ -70,6 +71,11 @@ Yes, there is limit in pusher. 100 connections, 200,000 messages, and unlimited 
 ```
 ## 2. Enable widget: Stay Alive ![alt tag](https://raw.githubusercontent.com/razzul/stay-alive/master/screenshoots/6.jpg)
 
+= 3rd Party Service = 
+We have used Pusher as a 3rd party socket service provider for free. 
+```
+//js.pusher.com/4.1/pusher.min.js
+```
 --------------------------------------------
 # Please report issues over [here](https://github.com/razzul/stay-alive/issues/new)
 
