@@ -3,9 +3,9 @@
 Contributors: rajulmondal5
 Donate link: https://profiles.wordpress.org/rajulmondal5
 Tags: users, online, active, live, pusher, chat, login
-Requires at least: 2.4.0
-Tested up to: 2.4.0
-Stable tag: 2.4.0
+Requires at least: 2.4.1
+Tested up to: 2.4.1
+Stable tag: 2.4.1
 Requires PHP: 5.2.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -61,7 +61,7 @@ Yes, there is limit in pusher. 100 connections, 200,000 messages, and unlimited 
 [sa_online_users]
 
 = Download =
-[2.4.0](https://github.com/razzul/stay-alive/releases) latest version of **stay-alive**
+[2.4.1](https://github.com/razzul/stay-alive/releases) latest version of **stay-alive**
 
 = How to use it =
 *Update pusher details and callback function from admin [plugin page](http://localhost/wordpress-talk/wp-admin/options-general.php?page=stay-alive-admin)* There are 2 ways to use it :
@@ -80,6 +80,11 @@ We have used Pusher as a 3rd party socket service provider for free.
 # Please report issues over [here](https://github.com/razzul/stay-alive/issues/new)
 
 == Changelog ==
+
+= 2.4.0 =
+* 08-07-2018
+* Updated readme.txt to mention pusher service used in our application
+* https://github.com/razzul/stay-alive/releases
 
 = 2.4.0 =
 * 06-07-2018
