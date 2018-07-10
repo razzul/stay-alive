@@ -3,9 +3,9 @@
 Contributors: rajulmondal5
 Donate link: https://profiles.wordpress.org/rajulmondal5
 Tags: users, online, active, live, pusher, chat, login
-Requires at least: 2.4.3
-Tested up to: 2.4.5
-Stable tag: 2.4.5
+Requires at least: 2.4.8
+Tested up to: 2.4.8
+Stable tag: 2.4.8
 Requires PHP: 5.2.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -99,6 +99,19 @@ We have used <a href="https://pusher.com/" target="_blank" >Pusher</a> as a 3rd 
 # Please report issues over [here](https://github.com/razzul/stay-alive/issues/new)
 
 == Changelog ==
+
+= 2.4.8 =
+* 10-07-2018
+* updated plugin version
+* Bug fix: filemtime() start failed 
+
+= 2.4.7 =
+* 10-07-2018
+* updated plugin version
+
+= 2.4.6 =
+* 10-07-2018
+* Bug fix: filemtime() start failed 
 
 = 2.4.5 =
 * 10-07-2018

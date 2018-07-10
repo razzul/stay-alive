@@ -3,7 +3,7 @@
 Plugin Name: Stay Alive
 Plugin URI: https://github.com/razzul/stayalive
 description: Stay Alive: wordpress plugin to check logged in user's status
-Version: 2.4.5
+Version: 2.4.8
 Author: razzul
 Author URI: https://github.com/razzul
 License: MIT
@@ -95,7 +95,7 @@ class StayAlive
         $event_name   = 'stay-alive-event';
         $stay_alive_trigger = !empty($options['stay_alive_trigger']) ? $options['stay_alive_trigger'] : 'test_stay_alive';
         wp_enqueue_script('pusher', '//js.pusher.com/4.1/pusher.min.js', array(), '4.1.0', true);
-        wp_register_script('stay_aliv_js', plugins_url( 'assets/js/stay-alive.js', __FILE__ ), array(), '2.4.5', true );
+        wp_register_script('stay_aliv_js', plugins_url( 'assets/js/stay-alive.js', __FILE__ ), array(), '2.4.8', true );
         wp_localize_script('stay_aliv_js', 'config', array('current_user_id' => $current_user_id, 'channel_name' => $channel_name,'event_name' => $event_name, 'credentials' => $options, 'auth_url' => site_url() .'/wp-admin/admin-ajax.php?action=stay_alive_auth'));
         wp_enqueue_script('stay_aliv_js');
     }
@@ -120,7 +120,7 @@ class StayAlive
      */
     public function stay_alive_css($value = '')
     {
-    	$my_css_ver = date("ymd-Gis", filemtime( plugin_dir_path( __FILE__ ) . 'css/stay-alive.css' ));
+        $my_css_ver = "1.0.0";
     	wp_register_style( 'stay_aliv_css',    plugins_url( 'assets/css/stay-alive.css',  __FILE__ ), false,   $my_css_ver );
     	wp_enqueue_style ( 'stay_aliv_css' );
     }
